@@ -20,7 +20,9 @@ Otago Regional Council (ORC) provides the public access to the Hilltop Server fo
 	* `hourly_WU`
 	* `daily_WU`
 
-## Example (python)
+The next section presents some detailed examples on how to obtain time series (either complete or for a period) from the public Hilltop Server.
+
+## Examples (python)
 
 Required modules:
 
@@ -72,7 +74,7 @@ WM = ['WM0062', 'WM0906']
 z = daily_WU(WM, date_start=20140626, date_end=20171214, melt=True)
 ```
 
-## Example (R)
+## Examples (R)
 
 Required libraries:
 
