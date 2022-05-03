@@ -30,7 +30,7 @@ Required modules:
 * [`numpy`](https://numpy.org)
 * [`pandas`](https://pandas.pydata.org)
 
-### 1. Daily flow ($m^3/s$) time series retrieval
+### 1. Daily flow (m<sup>3</sup>/s) time series retrieval
 
 ```py
 from HilltopServer import daily_Flo_global, daily_Flo_telemetry
@@ -46,7 +46,7 @@ x_telemetry = daily_Flo_telemetry(site)
 x = x_global.combine_first(x_telemetry)
 ```
 
-### 2. Hourly rainfall ($mm$) time series retrieval
+### 2. Hourly rainfall (mm) time series retrieval
 
 ```py
 from HilltopServer import hourly_Rain_global, hourly_Rain_telemetry
@@ -64,7 +64,7 @@ y_telemetry = hourly_Rain_telemetry(rain_gauge)
 y = y_global.combine_first(y_telemetry)
 ```
 
-### 3. All daily water use ($m^3/s$) time series retrieval
+### 3. All daily water use (m<sup>3</sup>/s) time series retrieval
 
 ```py
 from HilltopServer import daily_WU
@@ -82,7 +82,7 @@ Required libraries:
 * [`sf`](https://cran.r-project.org/web/packages/sf)
 * [`stringi`](https://cran.r-project.org/web/packages/stringi)
 
-### 1. Daily flow ($m^3/s$) time series retrieval
+### 1. Daily flow (m<sup>3</sup>/s) time series retrieval
 
 ```r
 source("HilltopServer.R")
@@ -101,7 +101,7 @@ x <- merge.data.table(x_global, x_telemetry, by = "Date", all = TRUE)
 x[, c(site, tmp_name) := .(fifelse(is.na(get(site)), get(tmp_name), get(site)), NULL)]
 ```
 
-### 2. Hourly rainfall ($mm$) time series retrieval
+### 2. Hourly rainfall (mm) time series retrieval
 
 ```r
 source("HilltopServer.R")
@@ -125,7 +125,7 @@ for (i in rain_gauge) {
 }
 ```
 
-### 3. All daily water use ($m^3/s$) time series retrieval
+### 3. All daily water use (m<sup>3</sup>/s) time series retrieval
 
 ```r
 source("HilltopServer.R")
