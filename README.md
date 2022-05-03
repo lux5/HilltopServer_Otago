@@ -40,7 +40,7 @@ x_global = daily_Flo_global(site)
 # Get the latest flow from Hilltop Telemetry for the two sites
 x_telemetry = daily_Flo_telemetry(site)
 
-# Use the telemetry flow data to update those obtained from Global to make a full dataset
+# Use the telemetry flow data to update those obtained from Global to make a complete dataset
 x = x_global.combine_first(x_telemetry)
 ```
 
@@ -58,7 +58,7 @@ y_global = hourly_Rain_global(rain_gauge)
 # Get the rainfall data from Hilltop Telemetry
 y_telemetry = hourly_Rain_telemetry(rain_gauge)
  
-# Use the Telemetry rainfall data to update those obtained from Global to make a full dataset
+# Use the Telemetry rainfall data to update those obtained from Global to make a complete dataset
 y = y_global.combine_first(y_telemetry)
 ```
 
@@ -92,7 +92,7 @@ x_global <- daily_Flo_global(site)
 # Get the latest flow from Hilltop Telemetry for the two sites
 x_telemetry <- daily_Flo_telemetry(site)
 
-# Use the telemetry flow data to update those obtained from Global to make a full dataset
+# Use the telemetry flow data to update those obtained from Global to make a complete dataset
 tmp_name <- paste0("telemetry_", site)
 setnames(x_telemetry, old = site, new = tmp_name)
 x <- merge.data.table(x_global, x_telemetry, by = "Date", all = TRUE)
@@ -113,7 +113,7 @@ y_global <- hourly_Rain_global(rain_gauge)
 # Get the rainfall data from Hilltop Telemetry
 y_telemetry <- hourly_Rain_telemetry(rain_gauge)
  
-# Use the Telemetry rainfall data to update those obtained from Global to make a full dataset
+# Use the Telemetry rainfall data to update those obtained from Global to make a complete dataset
 tmp_name <- paste0("telemetry_", rain_gauge)
 setnames(y_telemetry, old = rain_gauge, new = tmp_name)
 y <- merge.data.table(y_global, y_telemetry, by = "Time", all = TRUE)
