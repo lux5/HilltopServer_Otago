@@ -180,6 +180,18 @@ site_info <- function(dataset = "Global", measurementList = NULL, spatial_ONLY =
 }
 
 
+YMD <- function(x) {
+  # Easier way to have a "Date" vector
+  #
+  # Args:
+  #   x: A vector of integers/characters following "%Y%m%d" format for dates.
+  #
+  # Returns:
+  #   A vector of "Date" class.
+  return(as.Date(as.character(x), format = "%Y%m%d"))
+}
+
+
 RFwT <- function(office_use, dataset, site, measurement, date_start = NA, date_end = NA,
                  melt = FALSE, raw = FALSE) {
   # Obtain Rain/Flow/WaterTemp (RFwT) time series from HilltopServer for a single site.
