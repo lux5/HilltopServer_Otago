@@ -135,3 +135,14 @@ WM <- c("WM0062", "WM0906")
 z <- daily_WU(WM, date_start = 20140626, date_end = 20171214, melt = TRUE)
 ```
 
+## Note
+_globalWaterInfo
+If the specified VPN (from ORC) is set up properly. To get a complete time series, any functions with `*_globalWaterInfo` can be used directly. For example, as for `HilltopServer.py`, the 1<sup>st</sup> example can be simply written as follows:
+
+```py
+from HilltopServer import daily_Flo_globalWaterInfo
+
+# Get all daily flow from Hilltop globalWaterInfo for the following site
+site = 'Arrow at Cornwall street d/s'
+x = daily_Flo_globalWaterInfo(site)
+```
