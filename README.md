@@ -40,7 +40,7 @@ x_global = daily_Flo_global(site)
 # Get the latest flow from Hilltop Telemetry for the two sites
 x_telemetry = daily_Flo_telemetry(site)
 
-# Use the telemetry flow data to update those obtained from Global (till latest)
+# Use the telemetry flow data to update those obtained from Global to make a full dataset
 x = x_global.combine_first(x_telemetry)
 ```
 
@@ -58,7 +58,7 @@ y_global = hourly_Rain_global(rain_gauge)
 # Get the rainfall data from Hilltop Telemetry
 y_telemetry = hourly_Rain_telemetry(rain_gauge)
  
-# Use the Telemetry rainfall data to update those obtained from Global (till latest)
+# Use the Telemetry rainfall data to update those obtained from Global to make a full dataset
 y = y_global.combine_first(y_telemetry)
 ```
 
@@ -82,7 +82,7 @@ Required libraries:
 
 ### 1. Daily flow time series retrieval
 
-```py
+```r
 source("HilltopServer.R")
 
 # Get all daily flow from Hilltop Global for the following site
@@ -92,7 +92,7 @@ x_global <- daily_Flo_global(site)
 # Get the latest flow from Hilltop Telemetry for the two sites
 x_telemetry <- daily_Flo_telemetry(site)
 
-# Use the telemetry flow data to update those obtained from Global (till latest)
+# Use the telemetry flow data to update those obtained from Global to make a full dataset
 tmp_name <- paste0("telemetry_", site)
 setnames(x_telemetry, old = site, new = tmp_name)
 x <- merge.data.table(x_global, x_telemetry, by = "Date", all = TRUE)
@@ -101,7 +101,7 @@ x[, c(site, tmp_name) := .(fifelse(is.na(get(site)), get(tmp_name), get(site)), 
 
 ### 2. Hourly rainfall time series retrieval
 
-```py
+```r
 source("HilltopServer.R")
 
 # Get all the available hourly rainfall data for site
@@ -113,7 +113,7 @@ y_global <- hourly_Rain_global(rain_gauge)
 # Get the rainfall data from Hilltop Telemetry
 y_telemetry <- hourly_Rain_telemetry(rain_gauge)
  
-# Use the Telemetry rainfall data to update those obtained from Global (till latest)
+# Use the Telemetry rainfall data to update those obtained from Global to make a full dataset
 tmp_name <- paste0("telemetry_", rain_gauge)
 setnames(y_telemetry, old = rain_gauge, new = tmp_name)
 y <- merge.data.table(y_global, y_telemetry, by = "Time", all = TRUE)
@@ -125,7 +125,7 @@ for (i in rain_gauge) {
 
 ### 3. All daily water use time series retrieval
 
-```py
+```r
 source("HilltopServer.R")
 
 # Get daily water use (WU) between 2014-06-26 and 2017-12-14 (in tidy format)
