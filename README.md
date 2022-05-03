@@ -5,22 +5,22 @@ Tools that help to retrieve time series data from public Hilltop Server for Otag
 Otago Regional Council (ORC) provides the public access to the Hilltop Server for Global and Telemetry. Python/R functions listed below provides an easier access to the flow/rainfall/water use time series from the public Hilltop Server **Global**, **Telemetry**, and **GlobalWM**.
 
 * **Global**: This dataset contains all the possible certified hydro-related data till April 2021 from Otago Regional Council. The functions are:
-	* `hourly_Rain_global`
-	* `daily_Rain_global`
-	* `hourly_Flo_global`
-	* `daily_Flo_global`
-	* `water_temp_global`
+    * `hourly_Rain_global`
+    * `daily_Rain_global`
+    * `hourly_Flo_global`
+    * `daily_Flo_global`
+    * `water_temp_global`
 * **Telemetry**: This dataset contains all the latest records from ORC's telemetry sites, but not certified. They are:
-	* `hourly_Rain_telemetry`
-	* `daily_Rain_telemetry`
-	* `hourly_Flo_telemetry`
-	* `daily_Flo_telemetry`
-	* `water_temp_telemetry`
+    * `hourly_Rain_telemetry`
+    * `daily_Rain_telemetry`
+    * `hourly_Flo_telemetry`
+    * `daily_Flo_telemetry`
+    * `water_temp_telemetry`
 * **GlobalWM**: This dataset has all possible water use data (water meters as the site names) till the latest. They are:
-	* `hourly_WU`
-	* `daily_WU`
+    * `hourly_WU`
+    * `daily_WU`
 
-The next section presents some detailed examples on how to obtain time series (either complete or for a period) from the public Hilltop Server.
+The next section presents several examples in details on how to obtain time series (either complete or for a period) from the mentioned public Hilltop Server.
 
 ## Examples (python)
 
