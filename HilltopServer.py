@@ -663,7 +663,6 @@ def daily_Flo_niwaGlobal(
                     dataset='NIWAandGlobal', office_use=True)
 
 
-
 def water_temp_niwaGlobal(
         siteList: 'str | list[str]',
         date_start: 'int | str' = None,
