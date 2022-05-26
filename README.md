@@ -4,19 +4,19 @@ Tools that help to retrieve time series data from public Hilltop Server for Otag
 
 Otago Regional Council (ORC) provides the public access to the Hilltop Server for Global and Telemetry. Python/R functions listed below provides an easier access to the flow/rainfall/water use time series from the public Hilltop Server **Global**, **Telemetry**, and **GlobalWM**.
 
-* **Global**: This dataset contains all the possible certified hydro-related data till April 2021 from Otago Regional Council. The functions are:
+* **Global** (public access): This dataset contains all the possible certified hydro-related data till April 2021 from Otago Regional Council. The functions are:
     * `hourly_Rain_global`
     * `daily_Rain_global`
     * `hourly_Flo_global`
     * `daily_Flo_global`
     * `water_temp_global`
-* **Telemetry**: This dataset contains all the latest records from ORC's telemetry sites, but not certified. They are:
+* **Telemetry** (public access): This dataset contains all the latest records from ORC's telemetry sites, but not certified. They are:
     * `hourly_Rain_telemetry`
     * `daily_Rain_telemetry`
     * `hourly_Flo_telemetry`
     * `daily_Flo_telemetry`
     * `water_temp_telemetry`
-* **GlobalWM**: This dataset has all possible water use data (water meters as the site names) till the latest. They are:
+* **GlobalWM** (public access): This dataset has all possible water use data (water meters as the site names) till the latest. They are:
     * `hourly_WU`
     * `daily_WU`
 
@@ -137,7 +137,7 @@ z <- daily_WU(WM, date_start = 20140626, date_end = 20171214, melt = TRUE)
 
 ## Note
 
-If the specified VPN (from ORC) is authorised and set up properly. To get a complete time series, any functions with `*_globalWaterInfo` can be used directly. For example, as for `HilltopServer.py`, the 1<sup>st</sup> example can be simply written as follows:
+The VPN (from ORC) needs to be set up properly to get a complete time series from Hilltop Server `'GlobalandWaterInfo'`, any functions with `*_globalWaterInfo` can be used directly. For example, as for `HilltopServer.py`, the 1<sup>st</sup> example can be simply written as follows:
 
 ```py
 from HilltopServer import daily_Flo_globalWaterInfo
