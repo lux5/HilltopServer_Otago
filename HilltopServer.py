@@ -1,9 +1,7 @@
-
-import html
+# -*- coding: utf-8 -*-
 import re
 import sys
-from collections.abc import Callable
-from itertools import product
+from typing import Callable
 from urllib import parse, request
 
 # import geopandas as gpd
@@ -169,18 +167,17 @@ def site_info(
     return R[R.is_valid].reset_index(drop=True) if spatial_ONLY else R
 
 
-def RFwT(
+def _url_RFwT(
+        *,
         office_use: bool,
         dataset: str,
         site: str,
         measurement: str,
         date_start: int = None,
         date_end: int = None,
-        melt: bool = False,
-        raw: bool = False,
-    ) -> pd.DataFrame:
+    ) -> str:
     """
-    Obtain Rain/Flow/WaterTemp (RFwT) time series from HilltopServer for a single site
+    URL of the requested rain/flow/water temperature from HilltopServer for a single site
 
     Parameters
     ----------
@@ -197,16 +194,11 @@ def RFwT(
         Start date of the requested data. It follows '%Y%m%d' if specified.
     date_end : int | str, default=None - request the data till its end (4 days from now on)
         End date of the request data date. It follows '%Y%m%d' if specified.
-    melt : bool, default=False
-        Tidy version (`True`) of the data.
-    raw : bool, default=False
-        Whether get raw (True) time series (usually irrigular steps) or not (aggregated).
 
     Returns
     -------
-    pd.DataFrame
-        A DataFrame of a time series for a single site with a single measurement.
-
+    str
+        The url of th requested time series
     """
     fmt = '%Y-%m-%dT%X'
     ds = '1890-01-01T00:00:00' if date_start is None else (
@@ -224,12 +216,40 @@ def RFwT(
         'TimeInterval': f'{ds}/{de}'
     }
     query_str = parse.urlencode(query_dict).replace('+', '%20')
-    url = f'{home}?{query_str}'
+    return f'{home}?{query_str}'
+
+
+def RFwT(
+        *,
+        tidy: bool = False,
+        raw: bool = False,
+        **kw_url_RFwT
+    ) -> pd.DataFrame:
+    """
+    Obtain Rain/Flow/WaterTemp (RFwT) time series from HilltopServer for a single site
+
+    Parameters
+    ----------
+    tidy : bool, default=False
+        Tidy version (`True`) of the data.
+    raw : bool, default=False
+        Whether get raw (True) time series (usually irrigular steps) or not (aggregated).
+    **kw_url_RFwT : The arguments passed to `_url_RFwT` function
+
+    Returns
+    -------
+    pd.DataFrame
+        A DataFrame of a time series for a single site with a single measurement.
+
+    """
+    url = _url_RFwT(**kw_url_RFwT)
+    site = kw_url_RFwT.pop('site')
+    measurement = kw_url_RFwT.pop('measurement')
     lines = [b.decode(encoding='utf-8').rstrip() for b in request.urlopen(url)]
     if len(lines) == 1:
         print(f"{site} - {re.findall(r'<Error>(.*?)</Error>', lines[0])[0]}!!\n")
         return (pd.DataFrame(columns=['Time', 'Site', 'Measurement', 'Value'])
-            if melt else pd.DataFrame(columns=['Time', site]))
+            if tidy else pd.DataFrame(columns=['Time', site]))
     if raw:
         x = pd.DataFrame(
             {
@@ -251,7 +271,7 @@ def RFwT(
         x.loc[i_gap, site] = np.nan
         x[site] = x[site].astype(float)
         xx = x.dropna(subset=[site]).drop(columns=['Gap']).reset_index(drop=True)
-    if melt:
+    if tidy:
         xx.insert(1, 'Measurement', measurement)
         xx.insert(1, 'Site', site)
         xx = xx.rename(columns={site: 'Value'})
@@ -312,15 +332,19 @@ def _DFlo(**kw_RFwT) -> pd.DataFrame:
 
 def _HWU(**kw_RFwT) -> pd.DataFrame:
     """
-    Get hourly WU rate time series ('WM Hourly Volume' - m³/s) from Hilltop Server
+    Get hourly WU rate time series ('WM Hourly Volume' in m³/s) from Hilltop Server
         'WMGlobal' for a single water meter - see `help(RFwT)`
     """
     x = RFwT(dataset='WMGlobal', measurement='WM Hourly Volume', **kw_RFwT)
-    x.iloc[:, 1] = x.iloc[:, 1].mask(x.iloc[:, 1] < 0) / 86400
+    if x.empty:
+        x = RFwT(dataset='WMGlobal', measurement='Volume - Hourly [Flow]', **kw_RFwT)
+    if x.empty:
+        print(f"There is no water use time series (WU) for {kw_RFwT.pop('site')}!!\n")
+    x.iloc[:, 1] = x.iloc[:, 1].mask(x.iloc[:, 1] < 0) / 3600
     x['Time'] = pd.to_datetime(x['Time'].str[:13], format='%Y-%m-%dT%H')
     ts = x.set_index('Time').pipe(na_ts_insert)
-    con = all(item in kw_RFwT.items() for item in {'date_start': None}.items())
-    return ts if con else ts.iloc[1:, :]
+    date_start = kw_RFwT.pop('date_start', None)
+    return ts if date_start is None else ts.iloc[1:, :]
 
 
 def _DWU(**kw_RFwT) -> pd.DataFrame:
@@ -329,39 +353,21 @@ def _DWU(**kw_RFwT) -> pd.DataFrame:
         'WMGlobal' for a single water meter - see `help(RFwT)`
     """
     x = RFwT(dataset='WMGlobal', measurement='WM Daily Volume', **kw_RFwT)
+    if x.empty:
+        x = RFwT(dataset='WMGlobal', measurement='Volume - Daily [Flow]', **kw_RFwT)
+    if x.empty:
+        print(f"There is no water use time series (WU) for {kw_RFwT.pop('site')}!!\n")
     x.iloc[:, 1] = x.iloc[:, 1].mask(x.iloc[:, 1] < 0) / 86400
     x['Time'] = pd.to_datetime(x['Time'].str[:10], format='%Y-%m-%d')
     ts = x.set_index('Time').rename_axis(index='Date').pipe(na_ts_insert)
-    con = all(item in kw_RFwT.items() for item in {'date_start': None}.items())
-    return ts if con else ts.iloc[:-1, :]
-
-
-def _MWU(**kw_RFwT) -> pd.DataFrame:
-    """
-    Get monthly WU volume time series ('WM Monthly Volume' - m³) from Hilltop Server
-        'WMGlobal' for a single water meter - see `help(RFwT)`
-    """
-    x = RFwT(dataset='WMGlobal', measurement='WM Monthly Volume', **kw_RFwT)
-    x.iloc[:, 1] = x.iloc[:, 1].mask(x.iloc[:, 1] < 0)
-    x.index = pd.to_datetime(x['Time'].str[:7], format='%Y-%m')
-    return x.drop(columns='Time').rename_axis(index='Month')
-
-
-def _YWU(**kw_RFwT) -> pd.DataFrame:
-    """
-    Get water-yearly WU volume time series ('WM Yearly Volume' - m³) from Hilltop Server
-        'WMGlobal' for a single water meter - see `help(RFwT)`
-    """
-    x = RFwT(dataset='WMGlobal', measurement='WM Yearly Volume', **kw_RFwT)
-    x.iloc[:, 1] = x.iloc[:, 1].mask(x.iloc[:, 1] < 0)
-    x.index = pd.to_datetime(x['Time'].str[:7], format='%Y-%m')
-    return x.drop(columns='Time').rename_axis(index='Year')
+    date_start = kw_RFwT.pop('date_start', None)
+    return ts if date_start is None else ts.iloc[:-1, :]
 
 
 def _HDMY_HS(
         HDMY_func: Callable[..., pd.DataFrame],
         siteList: 'list[str] | str',
-        melt: bool = False,
+        tidy: bool = False,
         **kwargs
     ) -> pd.DataFrame:
     """
@@ -370,10 +376,10 @@ def _HDMY_HS(
     Parameters
     ----------
     HDMY_func : function
-        The one from {_HRain, _DRain, _HFlo, _DFlo, _HWU, _DWU, _MWU, _YWU}.
+        The one from {_HRain, _DRain, _HFlo, _DFlo, _HWU, _DWU}.
     siteList : str, array-like
         A list of sites' names.
-    melt : bool, default=False
+    tidy : bool, default=False
         Wide format (False) or long format output (True).
     **kwargs :
         Keyword arguments from the function defined in `HDMY_func`.
@@ -384,12 +390,11 @@ def _HDMY_HS(
         tmp = HDMY_func(site=site, **kwargs)
         ts = pd.concat([ts, tmp], axis=1, join='outer')
         ts.index.freq = None
-    if melt:
+    if tidy:
         dict_HDMY_func = {
             _HRain: 'Rainfall', _DRain: 'Rainfall',
             _HFlo: 'Flow', _DFlo: 'Flow',
-            _HWU: 'WU_rate', _DWU: 'WU_rate',
-            _MWU: 'WU_volume', _YWU: 'WU_volume'}
+            _HWU: 'WU_rate', _DWU: 'WU_rate'}
         value_name = dict_HDMY_func[HDMY_func]
         ts_melt = None
         for col in ts:
@@ -407,14 +412,14 @@ def hourly_Rain_global(
         siteList: 'str | list[str]',
         date_start: 'int | str' = None,
         date_end: 'int | str' = None,
-        melt: bool = False,
+        tidy: bool = False,
         office_use: bool = False
     ) -> pd.DataFrame:
     """
     Get hourly rainfall time series from 'Global' for multi sites:
         `from fun import _HDMY_HS; help(_HDMY_HS)`
     """
-    return _HDMY_HS(_HRain, siteList, melt, date_start=date_start, date_end=date_end,
+    return _HDMY_HS(_HRain, siteList, tidy, date_start=date_start, date_end=date_end,
                     dataset='Global', office_use=office_use)
 
 
@@ -422,14 +427,14 @@ def daily_Rain_global(
         siteList: 'str | list[str]',
         date_start: 'int | str' = None,
         date_end: 'int | str' = None,
-        melt: bool = False,
+        tidy: bool = False,
         office_use: bool = False
     ) -> pd.DataFrame:
     """
     Get daily rainfall time series from 'Global' for multi sites:
         `from fun import _HDMY_HS; help(_HDMY_HS)`
     """
-    return _HDMY_HS(_DRain, siteList, melt, date_start=date_start, date_end=date_end,
+    return _HDMY_HS(_DRain, siteList, tidy, date_start=date_start, date_end=date_end,
                     dataset='Global', office_use=office_use)
 
 
@@ -437,14 +442,14 @@ def hourly_Flo_global(
         siteList: 'str | list[str]',
         date_start: 'int | str' = None,
         date_end: 'int | str' = None,
-        melt: bool = False,
+        tidy: bool = False,
         office_use: bool = False
     ) -> pd.DataFrame:
     """
     Get hourly flow time series from 'Global' for multi sites:
         `from fun import _HDMY_HS; help(_HDMY_HS)`
     """
-    return _HDMY_HS(_HFlo, siteList, melt, date_start=date_start, date_end=date_end,
+    return _HDMY_HS(_HFlo, siteList, tidy, date_start=date_start, date_end=date_end,
                     dataset='Global', office_use=office_use)
 
 
@@ -452,14 +457,14 @@ def daily_Flo_global(
         siteList: 'str | list[str]',
         date_start: 'int | str' = None,
         date_end: 'int | str' = None,
-        melt: bool = False,
+        tidy: bool = False,
         office_use: bool = False
     ) -> pd.DataFrame:
     """
     Get daily flow time series from 'Global' for multi sites:
         `from fun import _HDMY_HS; help(_HDMY_HS)`
     """
-    return _HDMY_HS(_DFlo, siteList, melt, date_start=date_start, date_end=date_end,
+    return _HDMY_HS(_DFlo, siteList, tidy, date_start=date_start, date_end=date_end,
                     dataset='Global', office_use=office_use)
 
 
@@ -498,7 +503,7 @@ def water_temp_global(
             measurement='Water Temperature',
             date_start=date_start,
             date_end=date_end,
-            melt=True,
+            tidy=True,
             raw=True)
         wtemp = pd.concat([wtemp, tmp], axis=0, ignore_index=True, sort=False)
     wtemp['Time'] = pd.to_datetime(wtemp['Time'], format='%Y-%m-%dT%H:%M:%S')
@@ -509,14 +514,14 @@ def hourly_Rain_telemetry(
         siteList: 'str | list[str]',
         date_start: 'int | str' = None,
         date_end: 'int | str' = None,
-        melt: bool = False,
+        tidy: bool = False,
         office_use: bool = False
     ) -> pd.DataFrame:
     """
     Get hourly rainfall time series from 'Telemetry' for multi sites:
         `from fun import _HDMY_HS; help(_HDMY_HS)`
     """
-    return _HDMY_HS(_HRain, siteList, melt, date_start=date_start, date_end=date_end,
+    return _HDMY_HS(_HRain, siteList, tidy, date_start=date_start, date_end=date_end,
                     dataset='Telemetry', office_use=office_use)
 
 
@@ -524,14 +529,14 @@ def daily_Rain_telemetry(
         siteList: 'str | list[str]',
         date_start: 'int | str' = None,
         date_end: 'int | str' = None,
-        melt: bool = False,
+        tidy: bool = False,
         office_use: bool = False
     ) -> pd.DataFrame:
     """
     Get daily rainfall time series from 'Telemetry' for multi sites:
         `from fun import _HDMY_HS; help(_HDMY_HS)`
     """
-    return _HDMY_HS(_DRain, siteList, melt, date_start=date_start, date_end=date_end,
+    return _HDMY_HS(_DRain, siteList, tidy, date_start=date_start, date_end=date_end,
                     dataset='Telemetry', office_use=office_use)
 
 
@@ -539,14 +544,14 @@ def hourly_Flo_telemetry(
         siteList: 'str | list[str]',
         date_start: 'int | str' = None,
         date_end: 'int | str' = None,
-        melt: bool = False,
+        tidy: bool = False,
         office_use=False
     ) -> pd.DataFrame:
     """
     Get hourly flow time series from 'Telemetry' for multi sites:
         `from fun import _HDMY_HS; help(_HDMY_HS)`
     """
-    return _HDMY_HS(_HFlo, siteList, melt, date_start=date_start, date_end=date_end,
+    return _HDMY_HS(_HFlo, siteList, tidy, date_start=date_start, date_end=date_end,
                     dataset='Telemetry', office_use=office_use)
 
 
@@ -554,14 +559,14 @@ def daily_Flo_telemetry(
         siteList: 'str | list[str]',
         date_start: 'int | str' = None,
         date_end: 'int | str' = None,
-        melt: bool = False,
+        tidy: bool = False,
         office_use: bool = False
     ) -> pd.DataFrame:
     """
     Get daily flow time series from 'Telemetry' for multi sites:
         `from fun import _HDMY_HS; help(_HDMY_HS)`
     """
-    return _HDMY_HS(_DFlo, siteList, melt, date_start=date_start, date_end=date_end,
+    return _HDMY_HS(_DFlo, siteList, tidy, date_start=date_start, date_end=date_end,
                     dataset='Telemetry', office_use=office_use)
 
 
@@ -600,7 +605,7 @@ def water_temp_telemetry(
             measurement='Water Temperature',
             date_start=date_start,
             date_end=date_end,
-            melt=True,
+            tidy=True,
             raw=True)
         wtemp = pd.concat([wtemp, tmp], axis=0, ignore_index=True, sort=False)
     wtemp['Time'] = pd.to_datetime(wtemp['Time'], format='%Y-%m-%dT%H:%M:%S')
@@ -611,13 +616,13 @@ def hourly_Rain_niwaGlobal(
         siteList: 'str | list[str]',
         date_start: 'int | str' = None,
         date_end: 'int | str' = None,
-        melt: bool = False
+        tidy: bool = False
     ) -> pd.DataFrame:
     """
     Get hourly rainfall time series from 'NIWAandGlobal' for multi sites:
         `from fun import _HDMY_HS; help(_HDMY_HS)`
     """
-    return _HDMY_HS(_HRain, siteList, melt, date_start=date_start, date_end=date_end,
+    return _HDMY_HS(_HRain, siteList, tidy, date_start=date_start, date_end=date_end,
                     dataset='NIWAandGlobal', office_use=True)
 
 
@@ -625,13 +630,13 @@ def daily_Rain_niwaGlobal(
         siteList: 'str | list[str]',
         date_start: 'int | str' = None,
         date_end: 'int | str' = None,
-        melt: bool = False
+        tidy: bool = False
     ) -> pd.DataFrame:
     """
     Get daily rainfall time series from 'NIWAandGlobal' for multi sites:
         `from fun import _HDMY_HS; help(_HDMY_HS)`
     """
-    return _HDMY_HS(_DRain, siteList, melt, date_start=date_start, date_end=date_end,
+    return _HDMY_HS(_DRain, siteList, tidy, date_start=date_start, date_end=date_end,
                     dataset='NIWAandGlobal', office_use=True)
 
 
@@ -639,13 +644,13 @@ def hourly_Flo_niwaGlobal(
         siteList: 'str | list[str]',
         date_start: 'int | str' = None,
         date_end: 'int | str' = None,
-        melt: bool = False
+        tidy: bool = False
     ) -> pd.DataFrame:
     """
     Get hourly flow time series from 'NIWAandGlobal' for multi sites:
         `from fun import _HDMY_HS; help(_HDMY_HS)`
     """
-    return _HDMY_HS(_HFlo, siteList, melt, date_start=date_start, date_end=date_end,
+    return _HDMY_HS(_HFlo, siteList, tidy, date_start=date_start, date_end=date_end,
                     dataset='NIWAandGlobal', office_use=True)
 
 
@@ -653,13 +658,13 @@ def daily_Flo_niwaGlobal(
         siteList: 'str | list[str]',
         date_start: 'int | str' = None,
         date_end: 'int | str' = None,
-        melt: bool = False
+        tidy: bool = False
     ) -> pd.DataFrame:
     """
     Get daily flow time series from 'NIWAandGlobal' for multi sites:
         `from fun import _HDMY_HS; help(_HDMY_HS)`
     """
-    return _HDMY_HS(_DFlo, siteList, melt, date_start=date_start, date_end=date_end,
+    return _HDMY_HS(_DFlo, siteList, tidy, date_start=date_start, date_end=date_end,
                     dataset='NIWAandGlobal', office_use=True)
 
 
@@ -695,7 +700,7 @@ def water_temp_niwaGlobal(
             measurement='Water Temperature',
             date_start=date_start,
             date_end=date_end,
-            melt=True,
+            tidy=True,
             raw=True)
         wtemp = pd.concat([wtemp, tmp], axis=0, ignore_index=True, sort=False)
     wtemp['Time'] = pd.to_datetime(wtemp['Time'], format='%Y-%m-%dT%H:%M:%S')
@@ -706,13 +711,13 @@ def hourly_Rain_globalWaterInfo(
         siteList: 'str | list[str]',
         date_start: 'int | str' = None,
         date_end: 'int | str' = None,
-        melt: bool = False
+        tidy: bool = False
     ) -> pd.DataFrame:
     """
     Get hourly rainfall time series from 'GlobalandWaterInfo' for multi sites:
         `from fun import _HDMY_HS; help(_HDMY_HS)`
     """
-    return _HDMY_HS(_HRain, siteList, melt, date_start=date_start, date_end=date_end,
+    return _HDMY_HS(_HRain, siteList, tidy, date_start=date_start, date_end=date_end,
                     dataset='GlobalandWaterInfo', office_use=True)
 
 
@@ -720,13 +725,13 @@ def daily_Rain_globalWaterInfo(
         siteList: 'str | list[str]',
         date_start: 'int | str' = None,
         date_end: 'int | str' = None,
-        melt: bool = False
+        tidy: bool = False
     ) -> pd.DataFrame:
     """
     Get daily rainfall time series from 'GlobalandWaterInfo' for multi sites:
         `from fun import _HDMY_HS; help(_HDMY_HS)`
     """
-    return _HDMY_HS(_DRain, siteList, melt, date_start=date_start, date_end=date_end,
+    return _HDMY_HS(_DRain, siteList, tidy, date_start=date_start, date_end=date_end,
                     dataset='GlobalandWaterInfo', office_use=True)
 
 
@@ -734,13 +739,13 @@ def hourly_Flo_globalWaterInfo(
         siteList: 'str | list[str]',
         date_start: 'int | str' = None,
         date_end: 'int | str' = None,
-        melt: bool = False
+        tidy: bool = False
     ) -> pd.DataFrame:
     """
     Get hourly flow time series from 'GlobalandWaterInfo' for multi sites:
         `from fun import _HDMY_HS; help(_HDMY_HS)`
     """
-    return _HDMY_HS(_HFlo, siteList, melt, date_start=date_start, date_end=date_end,
+    return _HDMY_HS(_HFlo, siteList, tidy, date_start=date_start, date_end=date_end,
                     dataset='GlobalandWaterInfo', office_use=True)
 
 
@@ -748,13 +753,13 @@ def daily_Flo_globalWaterInfo(
         siteList: 'str | list[str]',
         date_start: 'int | str' = None,
         date_end: 'int | str' = None,
-        melt: bool = False
+        tidy: bool = False
     ) -> pd.DataFrame:
     """
     Get daily flow time series from 'GlobalandWaterInfo' for multi sites:
         `from fun import _HDMY_HS; help(_HDMY_HS)`
     """
-    return _HDMY_HS(_DFlo, siteList, melt, date_start=date_start, date_end=date_end,
+    return _HDMY_HS(_DFlo, siteList, tidy, date_start=date_start, date_end=date_end,
                     dataset='GlobalandWaterInfo', office_use=True)
 
 
@@ -790,7 +795,7 @@ def water_temp_globalWaterInfo(
             measurement='Water Temperature',
             date_start=date_start,
             date_end=date_end,
-            melt=True,
+            tidy=True,
             raw=True)
         wtemp = pd.concat([wtemp, tmp], axis=0, ignore_index=True, sort=False)
     wtemp['Time'] = pd.to_datetime(wtemp['Time'], format='%Y-%m-%dT%H:%M:%S')
@@ -801,14 +806,14 @@ def hourly_WU(
         siteList: 'str | list[str]',
         date_start: 'int | str' = None,
         date_end: 'int | str' = None,
-        melt: bool = False,
+        tidy: bool = False,
         office_use: bool = False
     ) -> pd.DataFrame:
     """
     Get hourly WU rate time series from 'WMGlobal' for multi sites:
         `from fun import _HDMY_HS; help(_HDMY_HS)`
     """
-    return _HDMY_HS(_HWU, siteList, melt, date_start=date_start, date_end=date_end,
+    return _HDMY_HS(_HWU, siteList, tidy, date_start=date_start, date_end=date_end,
                     office_use=office_use)
 
 
@@ -816,39 +821,15 @@ def daily_WU(
         siteList: 'str | list[str]',
         date_start: 'int | str' = None,
         date_end: 'int | str' = None,
-        melt: bool = False,
+        tidy: bool = False,
         office_use: bool = False
     ) -> pd.DataFrame:
     """
     Get daily WU rate time series from 'WMGlobal' for multi sites:
         `from fun import _HDMY_HS; help(_HDMY_HS)`
     """
-    return _HDMY_HS(_DWU, siteList, melt, date_start=date_start, date_end=date_end,
+    return _HDMY_HS(_DWU, siteList, tidy, date_start=date_start, date_end=date_end,
                     office_use=office_use)
-
-
-def monthly_WU(
-        siteList: 'str | list[str]',
-        melt: bool = False,
-        office_use: bool = False
-    ) -> pd.DataFrame:
-    """
-    Get monthly WU volume time series from 'WMGlobal' for multi sites:
-        `from fun import _HDMY_HS; help(_HDMY_HS)`
-    """
-    return _HDMY_HS(_MWU, siteList, melt, office_use=office_use)
-
-
-def yearly_WU(
-        siteList: 'str | list[str]',
-        melt: bool = False,
-        office_use: bool = False
-    ) -> pd.DataFrame:
-    """
-    Get water-yearly WU volume time series from 'WMGlobal' for multi sites:
-        `from fun import _HDMY_HS; help(_HDMY_HS)`
-    """
-    return _HDMY_HS(_YWU, siteList, melt, office_use=office_use)
 
 
 def daily_WU_sim(
@@ -899,95 +880,5 @@ def daily_WU_sim(
     return pd.DataFrame(
         data=np.where(np.isfinite(wu_arr), wu_arr, alloc_arr*ratio_arr),
         index=wu.index, columns=wu.columns) if sim else wu
-
-
-def _wq_gw_s(
-        site: str,
-        measurement: str,
-        date_start: 'int | str' = None,
-        date_end: 'int | str' = None,
-        office_use: bool = False
-    ) -> pd.DataFrame:
-    """
-    Obtain a time series from Hilltop Server 'ORCWQ' for a single site/measurement
-
-    Parameters
-    ----------
-    site : str
-        The name of a single site.
-    measurement : str
-        The measurement name.
-    date_start : int | str, default=None (the very start of the requested data)
-        Date start (either str in '%Y%m%d' or int YYYYmmdd) on request.
-    date_end : int | str, default=None (the very end of the requested data)
-        Date end (either str in '%Y%m%d' or int YYYYmmdd) on request.
-    office_use : bool, default=False
-        Internal access (True). The default is internal/external access (False).
-
-    Returns
-    -------
-    pd.DataFrame
-        A time series (DataFrame) for a specific site/measurement Hilltop Server 'ORCWQ'.
-    """
-    fmt = '%Y-%m-%dT%H:%M:%S'
-    ds = '1890-01-01T00:00:00' if date_start is None else (
-            pd.Timestamp(str(date_start)) + pd.Timedelta('1S')).strftime(fmt)
-    de = 'now' if date_end is None else (
-            pd.Timestamp(str(date_end)) + pd.Timedelta('1D')).strftime(fmt)
-    host = '192.168.1.195' if office_use else 'gisdata.orc.govt.nz'
-    home = f'http://{host}/hilltop/ORCWQ.hts'
-    query_dict = {
-        'Service': 'Hilltop',
-        'Request': 'GetData',
-        'Site': site,
-        'Measurement': measurement,
-        'TimeInterval': f'{ds}/{de}'
-    }
-    query_str = parse.urlencode(query_dict).replace('+', '%20')
-    url = home + '?' + query_str
-    html_str = request.urlopen(url).read().decode('utf-8')
-    col = ['Time', 'Site', 'Measurement', 'Expression', 'Value']
-    if all(err_str in html_str for err_str in ['<Error>', '</Error>']):
-        print(f"{site} - {re.findall(r'<Error>(.*?)</Error>', html_str)[0]}!!\n")
-        df = pd.DataFrame(columns=col)
-    else:
-        s = re.findall(r'<Value>(.*?)</Value>', html_str)
-        expr = ['=' if len(i.split(';')) == 1 else html.unescape(i.split(';')[0]) for i in s]
-        vs = [j.split(';')[0] if len(j.split(';')) == 1 else j.split(';')[1] for j in s]
-        v = np.array([float(k) for k in vs])
-        time_v = pd.to_datetime(re.findall(r'<T>(.*?)</T>', html_str), format=fmt)
-        df = pd.DataFrame(dict(zip(col, [time_v, site, measurement, expr, v])))
-    return df
-
-
-def wq_gw(
-        siteList: 'str | list[str]',
-        measurementList: 'str | list[str]',
-        *args,
-        **kwargs
-    ) -> pd.DataFrame:
-    """
-    Obtain time series from Hilltop Server 'ORCWQ' for multi sites/measurements
-
-    Parameters
-    ----------
-    siteList : str, array-like
-        List of site names.
-    measurementList : str, array-like
-        List of measurement names.
-    *args, **kwargs : `from fun import _wq_gw_s; help(_wq_gw_s)`
-
-    Returns
-    -------
-    pd.DataFrame
-        A DataFrame of time series (tidy data).
-    """
-    if isinstance(siteList, str): siteList = [siteList]
-    if isinstance(measurementList, str): measurementList = [measurementList]
-    TS = None
-    for site_measurement in product(pd.unique(siteList), pd.unique(measurementList)):
-        tmp = _wq_gw_s(*site_measurement, *args, **kwargs)
-        TS = pd.concat([TS, tmp], axis=0, sort=False, ignore_index=True)
-    return TS
 
 
