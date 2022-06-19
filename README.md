@@ -71,7 +71,7 @@ from HilltopServer import daily_WU
 
 # Get daily water use (WU) between 2014-06-26 and 2017-12-14 (in tidy format)
 WM = ['WM0062', 'WM0906']
-z = daily_WU(WM, date_start=20140626, date_end=20171214, melt=True)
+z = daily_WU(WM, date_start=20140626, date_end=20171214, tidy=True)
 ```
 
 ## Examples (R)
@@ -132,7 +132,7 @@ source("HilltopServer.R")
 
 # Get daily water use (WU) between 2014-06-26 and 2017-12-14 (in tidy format)
 WM <- c("WM0062", "WM0906")
-z <- daily_WU(WM, date_start = 20140626, date_end = 20171214, melt = TRUE)
+z <- daily_WU(WM, date_start = 20140626, date_end = 20171214, tidy = TRUE)
 ```
 
 ## Note
