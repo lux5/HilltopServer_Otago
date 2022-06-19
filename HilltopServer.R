@@ -496,68 +496,56 @@ RFwT <- function(office_use, dataset, site, measurement, date_start = NA, date_e
 hourly_Rain_global <- function(siteList, date_start = NA, date_end = NA, tidy = FALSE,
                                office_use = FALSE) {
   # Get hourly rainfall time series from 'Global' for multiple sites, see `.HD_HS`.
-  return(
-    .HD_HS(
-      ".HRain",
-      siteList,
-      tidy,
-      date_start = date_start,
-      date_end = date_end,
-      dataset = "Global",
-      office_use = office_use
-    )
-  )
+  return(.HD_HS(
+    ".HRain",
+    siteList,
+    tidy,
+    date_start = date_start,
+    date_end = date_end,
+    dataset = "Global",
+    office_use = office_use))
 }
 
 
 daily_Rain_global <- function(siteList, date_start = NA, date_end = NA, tidy = FALSE,
                               office_use = FALSE) {
   # Get daily rainfall time series from 'Global' for multiple sites, see `.HD_HS`.
-  return(
-    .HD_HS(
-      ".DRain",
-      siteList,
-      tidy,
-      date_start = date_start,
-      date_end = date_end,
-      dataset = "Global",
-      office_use = office_use
-    )
-  )
+  return(.HD_HS(
+    ".DRain",
+    siteList,
+    tidy,
+    date_start = date_start,
+    date_end = date_end,
+    dataset = "Global",
+    office_use = office_use))
 }
 
 
 hourly_Flo_global <- function(siteList, date_start = NA, date_end = NA, tidy = FALSE,
                               office_use = FALSE) {
   # Get hourly flow time series from 'Global' for multiple sites, see `.HD_HS`.
-  return(
-    .HD_HS(
-      ".HFlo",
-      siteList,
-      tidy,
-      date_start = date_start,
-      date_end = date_end,
-      dataset = "Global",
-      office_use = office_use
-    )
-  )
+  return(.HD_HS(
+    ".HFlo",
+    siteList,
+    tidy,
+    date_start = date_start,
+    date_end = date_end,
+    dataset = "Global",
+    office_use = office_use))
 }
 
 
 daily_Flo_global <- function(siteList, date_start = NA, date_end = NA, tidy = FALSE,
                              office_use = FALSE) {
   # Get daily flow time series from 'Global' for multiple sites, see `.HD_HS`.
-  return(
-    .HD_HS(
-      ".DFlo",
-      siteList,
-      tidy,
-      date_start = date_start,
-      date_end = date_end,
-      dataset = "Global",
-      office_use = office_use
-    )
-  )
+  return(.HD_HS(
+    ".DFlo",
+    siteList,
+    tidy,
+    date_start = date_start,
+    date_end = date_end,
+    dataset = "Global",
+    office_use = office_use))
 }
 
 
@@ -579,68 +567,56 @@ water_temp_global <- function(siteList, date_start = NA, date_end = NA, office_u
 hourly_Rain_telemetry <- function(siteList, date_start = NA, date_end = NA, tidy = FALSE,
                                   office_use = FALSE) {
   # Get hourly rainfall time series from 'Telemetry' for multiple sites, see `.HD_HS`.
-  return(
-    .HD_HS(
-      ".HRain",
-      siteList,
-      tidy,
-      date_start = date_start,
-      date_end = date_end,
-      dataset = "Telemetry",
-      office_use = office_use
-    )
-  )
+  return(.HD_HS(
+    ".HRain",
+    siteList,
+    tidy,
+    date_start = date_start,
+    date_end = date_end,
+    dataset = "Telemetry",
+    office_use = office_use))
 }
 
 
 daily_Rain_telemetry <- function(siteList, date_start = NA, date_end = NA, tidy = FALSE,
                                  office_use = FALSE) {
   # Get daily rainfall time series from 'Telemetry' for multiple sites, see `.HD_HS`.
-  return(
-    .HD_HS(
-      ".DRain",
-      siteList,
-      tidy,
-      date_start = date_start,
-      date_end = date_end,
-      dataset = "Telemetry",
-      office_use = office_use
-    )
-  )
+  return(.HD_HS(
+    ".DRain",
+    siteList,
+    tidy,
+    date_start = date_start,
+    date_end = date_end,
+    dataset = "Telemetry",
+    office_use = office_use))
 }
 
 
 hourly_Flo_telemetry <- function(siteList, date_start = NA, date_end = NA, tidy = FALSE,
                                  office_use = FALSE) {
   # Get hourly flow time series from 'Telemetry' for multiple sites, see `.HD_HS`.
-  return(
-    .HD_HS(
-      ".HFlo",
-      siteList,
-      tidy,
-      date_start = date_start,
-      date_end = date_end,
-      dataset = "Telemetry",
-      office_use = office_use
-    )
-  )
+  return(.HD_HS(
+    ".HFlo",
+    siteList,
+    tidy,
+    date_start = date_start,
+    date_end = date_end,
+    dataset = "Telemetry",
+    office_use = office_use))
 }
 
 
 daily_Flo_telemetry <- function(siteList, date_start = NA, date_end = NA, tidy = FALSE,
                                 office_use = FALSE) {
   # Get daily flow time series from 'Telemetry' for multiple sites, see `.HD_HS`.
-  return(
-    .HD_HS(
-      ".DFlo",
-      siteList,
-      tidy,
-      date_start = date_start,
-      date_end = date_end,
-      dataset = "Telemetry",
-      office_use = office_use
-    )
-  )
+  return(.HD_HS(
+    ".DFlo",
+    siteList,
+    tidy,
+    date_start = date_start,
+    date_end = date_end,
+    dataset = "Telemetry",
+    office_use = office_use))
 }
 
 
@@ -662,65 +638,53 @@ water_temp_telemetry <- function(siteList, date_start = NA, date_end = NA,
 
 hourly_Rain_niwaGlobal <- function(siteList, date_start = NA, date_end = NA, tidy = FALSE) {
   # Get hourly rainfall time series from 'NIWAandGlobal' for multiple sites, see `.HD_HS`.
-  return(
-    .HD_HS(
-      ".HRain",
-      siteList,
-      tidy,
-      date_start = date_start,
-      date_end = date_end,
-      dataset = "NIWAandGlobal",
-      office_use = TRUE
-    )
-  )
+  return(.HD_HS(
+    ".HRain",
+    siteList,
+    tidy,
+    date_start = date_start,
+    date_end = date_end,
+    dataset = "NIWAandGlobal",
+    office_use = TRUE))
 }
 
 
 daily_Rain_niwaGlobal <- function(siteList, date_start = NA, date_end = NA, tidy = FALSE) {
   # Get daily rainfall time series from 'NIWAandGlobal' for multiple sites, see `.HD_HS`.
-  return(
-    .HD_HS(
-      ".DRain",
-      siteList,
-      tidy,
-      date_start = date_start,
-      date_end = date_end,
-      dataset = "NIWAandGlobal",
-      office_use = TRUE
-    )
-  )
+  return(.HD_HS(
+    ".DRain",
+    siteList,
+    tidy,
+    date_start = date_start,
+    date_end = date_end,
+    dataset = "NIWAandGlobal",
+    office_use = TRUE))
 }
 
 
 hourly_Flo_niwaGlobal <- function(siteList, date_start = NA, date_end = NA, tidy = FALSE) {
   # Get hourly flow time series from 'NIWAandGlobal' for multiple sites, see `.HD_HS`.
-  return(
-    .HD_HS(
-      ".HFlo",
-      siteList,
-      tidy,
-      date_start = date_start,
-      date_end = date_end,
-      dataset = "NIWAandGlobal",
-      office_use = TRUE
-    )
-  )
+  return(.HD_HS(
+    ".HFlo",
+    siteList,
+    tidy,
+    date_start = date_start,
+    date_end = date_end,
+    dataset = "NIWAandGlobal",
+    office_use = TRUE))
 }
 
 
 daily_Flo_niwaGlobal <- function(siteList, date_start = NA, date_end = NA, tidy = FALSE) {
   # Get daily flow time series from 'NIWAandGlobal' for multiple sites, see `.HD_HS`.
-  return(
-    .HD_HS(
-      ".DFlo",
-      siteList,
-      tidy,
-      date_start = date_start,
-      date_end = date_end,
-      dataset = "NIWAandGlobal",
-      office_use = TRUE
-    )
-  )
+  return(.HD_HS(
+    ".DFlo",
+    siteList,
+    tidy,
+    date_start = date_start,
+    date_end = date_end,
+    dataset = "NIWAandGlobal",
+    office_use = TRUE))
 }
 
 
@@ -742,68 +706,56 @@ water_temp_niwaGlobal <- function(siteList, date_start = NA, date_end = NA) {
 hourly_Rain_globalWaterInfo <- function(siteList, date_start = NA, date_end = NA,
                                         tidy = FALSE) {
   # Get hourly rainfall from 'GlobalandWaterInfo' for multiple sites, see `.HD_HS`.
-  return(
-    .HD_HS(
-      ".HRain",
-      siteList,
-      tidy,
-      date_start = date_start,
-      date_end = date_end,
-      dataset = "GlobalandWaterInfo",
-      office_use = TRUE
-    )
-  )
+  return(.HD_HS(
+    ".HRain",
+    siteList,
+    tidy,
+    date_start = date_start,
+    date_end = date_end,
+    dataset = "GlobalandWaterInfo",
+    office_use = TRUE))
 }
 
 
 daily_Rain_globalWaterInfo <- function(siteList, date_start = NA, date_end = NA,
                                        tidy = FALSE) {
   # Get daily rainfall from 'GlobalandWaterInfo' for multiple sites, see `.HD_HS`.
-  return(
-    .HD_HS(
-      ".DRain",
-      siteList,
-      tidy,
-      date_start = date_start,
-      date_end = date_end,
-      dataset = "GlobalandWaterInfo",
-      office_use = TRUE
-    )
-  )
+  return(.HD_HS(
+    ".DRain",
+    siteList,
+    tidy,
+    date_start = date_start,
+    date_end = date_end,
+    dataset = "GlobalandWaterInfo",
+    office_use = TRUE))
 }
 
 
 hourly_Flo_globalWaterInfo <- function(siteList, date_start = NA, date_end = NA,
                                        tidy = FALSE) {
   # Get hourly flow from 'GlobalandWaterInfo' for multiple sites, see `.HD_HS`.
-  return(
-    .HD_HS(
-      ".HFlo",
-      siteList,
-      tidy,
-      date_start = date_start,
-      date_end = date_end,
-      dataset = "GlobalandWaterInfo",
-      office_use = TRUE
-    )
-  )
+  return(.HD_HS(
+    ".HFlo",
+    siteList,
+    tidy,
+    date_start = date_start,
+    date_end = date_end,
+    dataset = "GlobalandWaterInfo",
+    office_use = TRUE))
 }
 
 
 daily_Flo_globalWaterInfo <- function(siteList, date_start = NA, date_end = NA,
                                       tidy = FALSE) {
   # Get daily flow from 'GlobalandWaterInfo' for multiple sites, see `.HD_HS`.
-  return(
-    .HD_HS(
-      ".DFlo",
-      siteList,
-      tidy,
-      date_start = date_start,
-      date_end = date_end,
-      dataset = "GlobalandWaterInfo",
-      office_use = TRUE
-    )
-  )
+  return(.HD_HS(
+    ".DFlo",
+    siteList,
+    tidy,
+    date_start = date_start,
+    date_end = date_end,
+    dataset = "GlobalandWaterInfo",
+    office_use = TRUE))
 }
 
 
@@ -825,32 +777,26 @@ water_temp_globalWaterInfo <- function(siteList, date_start = NA, date_end = NA)
 hourly_WU <- function(siteList, date_start = NA, date_end = NA, tidy = FALSE,
                       office_use = FALSE) {
   # Get hourly WU rate time series from 'WMGlobal' for multiple sites.
-  return(
-    .HD_HS(
-      ".HWU",
-      siteList,
-      tidy,
-      date_start = date_start,
-      date_end = date_end,
-      office_use = office_use
-    )
-  )
+  return(.HD_HS(
+    ".HWU",
+    siteList,
+    tidy,
+    date_start = date_start,
+    date_end = date_end,
+    office_use = office_use))
 }
 
 
 daily_WU <- function(siteList, date_start = NA, date_end = NA, tidy = FALSE,
                      office_use = FALSE) {
   # Get daily WU rate time series from 'WMGlobal' for multiple sites.
-  return(
-    .HD_HS(
-      ".DWU",
-      siteList,
-      tidy,
-      date_start = date_start,
-      date_end = date_end,
-      office_use = office_use
-    )
-  )
+  return(.HD_HS(
+    ".DWU",
+    siteList,
+    tidy,
+    date_start = date_start,
+    date_end = date_end,
+    office_use = office_use))
 }
 
 
