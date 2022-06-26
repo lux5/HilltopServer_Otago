@@ -834,6 +834,13 @@ def hourly_WU(
     Get hourly WU rate time series from 'WMGlobal' for multi sites:
         `from fun import _HD_HS; help(_HD_HS)`
     """
+    if isinstance(siteList, str): siteList = [siteList]
+    for s in siteList:
+        if (re.match(r'[WD][MS]\d{4}\w*', s)) is None:
+            print(f'[{s}] is NOT a valid water meter - Ignored!!\n')
+    siteList = [s for s in siteList if re.match(r'[WD][MS]\d{4}\w*', s)]
+    if not siteList:
+        return print('Please use the valid water meters!!\n')
     return _HD_HS(_HWU, siteList, tidy, date_start=date_start, date_end=date_end,
                   office_use=office_use)
 
@@ -849,6 +856,13 @@ def daily_WU(
     Get daily WU rate time series from 'WMGlobal' for multi sites:
         `from fun import _HD_HS; help(_HD_HS)`
     """
+    if isinstance(siteList, str): siteList = [siteList]
+    for s in siteList:
+        if (re.match(r'[WD][MS]\d{4}\w*', s)) is None:
+            print(f'[{s}] is NOT a valid water meter - Ignored!!\n')
+    siteList = [s for s in siteList if re.match(r'[WD][MS]\d{4}\w*', s)]
+    if not siteList:
+        return print('Please use the valid water meters!!\n')
     return _HD_HS(_DWU, siteList, tidy, date_start=date_start, date_end=date_end,
                   office_use=office_use)
 
