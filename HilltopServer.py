@@ -835,10 +835,12 @@ def hourly_WU(
         `from fun import _HD_HS; help(_HD_HS)`
     """
     if isinstance(siteList, str): siteList = [siteList]
+    p1 = r'^WM\d{4}\w?$'
+    p2 = r'^DS\d{4}\w?$'
     for s in siteList:
-        if (re.match(r'[WD][MS]\d{4}\w*', s)) is None:
+        if re.match(p1, s, re.I) is None and re.match(p2, s, re.I) is None:
             print(f'[{s}] is NOT a valid water meter - Ignored!!\n')
-    siteList = [s for s in siteList if re.match(r'[WD][MS]\d{4}\w*', s)]
+    siteList = [s for s in siteList if re.match(p1, s, re.I) or re.match(p2, s, re.I)]
     if not siteList:
         return print('Please use the valid water meters!!\n')
     return _HD_HS(_HWU, siteList, tidy, date_start=date_start, date_end=date_end,
@@ -857,10 +859,12 @@ def daily_WU(
         `from fun import _HD_HS; help(_HD_HS)`
     """
     if isinstance(siteList, str): siteList = [siteList]
+    p1 = r'^WM\d{4}\w?$'
+    p2 = r'^DS\d{4}\w?$'
     for s in siteList:
-        if (re.match(r'[WD][MS]\d{4}\w*', s)) is None:
+        if re.match(p1, s, re.I) is None and re.match(p2, s, re.I) is None:
             print(f'[{s}] is NOT a valid water meter - Ignored!!\n')
-    siteList = [s for s in siteList if re.match(r'[WD][MS]\d{4}\w*', s)]
+    siteList = [s for s in siteList if re.match(p1, s, re.I) or re.match(p2, s, re.I)]
     if not siteList:
         return print('Please use the valid water meters!!\n')
     return _HD_HS(_DWU, siteList, tidy, date_start=date_start, date_end=date_end,
