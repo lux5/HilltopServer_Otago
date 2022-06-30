@@ -777,16 +777,18 @@ water_temp_globalWaterInfo <- function(siteList, date_start = NA, date_end = NA)
 hourly_WU <- function(siteList, date_start = NA, date_end = NA, tidy = FALSE,
                       office_use = FALSE) {
   # Get hourly WU rate time series from 'WMGlobal' for multiple sites.
+  p1 <- "^WM\\d{4}\\w?$"
+  p2 <- "^DS\\d{4}\\w?$"
   for (s in siteList) {
-    if (!stri_detect(s, regex = "[WD][MS]\\d{4}\\w*"))
+    if (!stri_detect(s, regex = p1) & !stri_detect(s, regex = p2))
       cat(paste0("[", s, "] is NOT a valid water meter - Ignored!!\n\n"))
   }
-  siteList <- siteList[stri_detect(siteList, regex = "[WD][MS]\\d{4}\\w*")]
-  if (!length(siteList))
+  sl <- siteList[stri_detect(siteList, regex = p1) | stri_detect(siteList, regex = p2)]
+  if (!length(sl))
     return(cat("Please use the valid water meters!!\n\n"))
   return(.HD_HS(
     ".HWU",
-    siteList,
+    sl,
     tidy,
     date_start = date_start,
     date_end = date_end,
@@ -797,16 +799,18 @@ hourly_WU <- function(siteList, date_start = NA, date_end = NA, tidy = FALSE,
 daily_WU <- function(siteList, date_start = NA, date_end = NA, tidy = FALSE,
                      office_use = FALSE) {
   # Get daily WU rate time series from 'WMGlobal' for multiple sites.
+  p1 <- "^WM\\d{4}\\w?$"
+  p2 <- "^DS\\d{4}\\w?$"
   for (s in siteList) {
-    if (!stri_detect(s, regex = "[WD][MS]\\d{4}\\w*"))
+    if (!stri_detect(s, regex = p1) & !stri_detect(s, regex = p2))
       cat(paste0("[", s, "] is NOT a valid water meter - Ignored!!\n\n"))
   }
-  siteList <- siteList[stri_detect(siteList, regex = "[WD][MS]\\d{4}\\w*")]
-  if (!length(siteList))
+  sl <- siteList[stri_detect(siteList, regex = p1) | stri_detect(siteList, regex = p2)]
+  if (!length(sl))
     return(cat("Please use the valid water meters!!\n\n"))
   return(.HD_HS(
     ".DWU",
-    siteList,
+    sl,
     tidy,
     date_start = date_start,
     date_end = date_end,
