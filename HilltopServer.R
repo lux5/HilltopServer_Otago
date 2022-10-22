@@ -3,6 +3,8 @@ library(data.table)  # Fast operations on large data frames
 library(sf)  # Simple features, a standardized way to encode spatial vector data
 library(stringi)  # A set of string processing tools
 
+Sys.setenv(TZ = "Etc/GMT-12")  # Sys.unsetenv("TZ"); Sys.timezone()
+
 
 xts_2_dt <- function(xts_obj) {
   # Convert xts object to a data.table object
@@ -60,7 +62,7 @@ ts_step <- function(TS, minimum_time_step_in_second = 60L) {
   if ("Date" %in% class(t1)) {
     return(0L)
   } else {
-    t2 <- as.numeric(difftime(t1[-1], t1[-length(t1)], units = "secs"))
+    t2 <- as.numeric(difftime(t1[-1], t1[-length(t1)], units = "s"))
     t3 <- t2[t2 >= minimum_time_step_in_second]
     step_minimum <- min(t3)
     if (all(t3 %% step_minimum == 0)) return(step_minimum) else return(-1L)
@@ -165,7 +167,7 @@ site_info <- function(dataset = "Global", measurementList = NULL, spatial_ONLY =
     r[, `:=`(
       From = as.POSIXct(From, "%Y-%m-%dT%H:%M:%S", tz = "Etc/GMT-12"),
       To = as.POSIXct(To, "%Y-%m-%dT%H:%M:%S", tz = "Etc/GMT-12"),
-      Length_yr = as.numeric(difftime(To, From, units = "days")) / 365.2422
+      Length_yr = as.numeric(difftime(To, From, units = "d")) / 365.2422
     )]
     r[, `:=`(From = as.character(From), To = as.character(To))]
     tmp <- loc[r, on = "Site"]
@@ -887,6 +889,54 @@ daily_WU_sim <- function(DF, rm_rule = NULL, sim = TRUE, office_use = FALSE) {
   wu_sim <- data.frame(wu_tmp$Date, ifelse(is.na(wu_mx), alloc_mx * ratio_mx, wu_mx))
   names(wu_sim) <- names(wu_tmp)
   return(.as_df(DF)(if (sim) wu_sim else wu))
+}
+
+
+.HRain_forecast <- function(site, measurement) {
+  # Get all the hourly forecast rainfall time series for a single site
+  #
+  # Args:
+  #   site : A rain gauge name.
+  #   measurement : One of c('Rainfall Forecast - UKMO',
+  #                          'Rainfall Forecast - NCEP',
+  #                          'Rainfall Forecast - ECMWF',
+  #                          'Rainfall Forecast - Model of the day')
+  #
+  # Returns:
+  #   data.table of all the available hourly forecast rainfall time series
+  x <- RFwT(TRUE, "GlobalandWaterInfo", site, measurement)
+  setnames(x, old = site, new = "Value")
+  if (!x[, .N])
+    cat("[", site, "] : ", "NO rainfall data under [", measurement, "]!!\n\n", sep = "")
+  x[, Time := as.POSIXct(stri_sub(Time, 1L, 13L), "Etc/GMT-12", "%Y-%m-%dT%H")]
+  x[Value < 0, Value := NA]
+  setnames(x, old = "Value", new = paste0(site, "\n(", measurement, ")"))
+  return(na_ts_insert(x))
+}
+
+
+hourly_Rain_forecast <- function(siteList, measurementList, tidy = FALSE) {
+  # Get all the hourly forecast rainfall time series for multi sites/measurements.
+  #
+  # Args:
+  #   siteList : A rain gauge name.
+  #   measurementList : List of measurements, the elements are:
+  #     'Rainfall Forecast - UKMO',
+  #     'Rainfall Forecast - NCEP',
+  #     'Rainfall Forecast - ECMWF',
+  #     'Rainfall Forecast - Model of the day'
+  #
+  # Returns:
+  #   All the available hourly forecast rainfall time series for multi sites/measurements.
+  sm_df <- data.table(siteList = siteList, measurementList = measurementList)
+  x <- NULL
+  for (i in sm_df[, .I]) {
+    t1 <- .HRain_forecast(sm_df[i, siteList], sm_df[i, measurementList])
+    vn <- names(t1)[2]
+    t2 <- t1[, .(Site = vn, Time, Rainfall = get(vn))]
+    x <- rbind(x, t2)
+  }
+  return(if (tidy) x else dcast.data.table(x, Time ~ Site, value.var = "Rainfall"))
 }
 
 
